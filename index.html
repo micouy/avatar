@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <style media="screen">
+      * {
+        font-size: 20px;
+      }
+
+      div, html, body {
+        padding: 0;
+        margin: 0;
+      }
+
+      p {
+      	margin: 0;
+      	padding: 5px 0 5px 0;
+      }
+
+      video::-webkit-media-controls-play-button,
+      video::-webkit-media-controls-timeline {
+        display: none;
+      }
+
+      div {
+        display: flex;
+      }
+
+      .container {
+        flex-direction: column;
+      }
+
+      .controls {
+        flex-direction: row;
+      }
+
+      button, input {
+        margin: 5px;
+      }
+
+      input {
+        width: 200px;
+      }
+
+      video {
+        background: black;
+        top: 0px; */
+      }
+    </style>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+      var socket = io();
+
+      var video;
+      var URLInput;
+      var URLbutton;
+      var playButton;
+      var pauseButton;
+
+      window.onload = function() {
+        video = document.getElementById("video");
+        URLInput = document.getElementById("URLInput");
+        URLbutton = document.getElementById("URLbutton");
+        fileInput = document.getElementById("fileInput");
+        fileButton = document.getElementById("fileButton");
+        playButton = document.getElementById("playButton");
+        pauseButton = document.getElementById("pauseButton");
+        timeInput = document.getElementById("timeInput");
+        timeButton = document.getElementById("timeButton");
+        stateText = document.getElementById("stateText");
+
+        video.onclick = function() {}
+
+        // output
+        URLbutton.onclick = function() {
+          socket.emit('loadUrl', URLInput.value);
+        }
+        fileButton.onclick = function() {
+        console.log('loadFile');
+          socket.emit('loadFile', fileInput.value);
+        }
+
+        playButton.onclick = function() {
+          socket.emit('startPlaying');
+        }
+
+        pauseButton.onclick = function() {
+          socket.emit('stopPlaying');
+        }
+
+        timeButton.onclick = function() {
+          // let time = timeInput.value.split(":");
+          // let seconds =
+          // parseInt(time[0]) * 3600
+          // + parseInt(time[1]) * 60
+          // + parseInt(time[2]);
+          let seconds = Math.floor(timeInput.valueAsNumber / 1000);
+          socket.emit('setTime', seconds);
+        }
+
+        // input
+        socket.on('loadUrl', function(url) {
+          console.log("loading url " + url);
+          video.src = url;
+          video.load();
+          socket.emit('message', 'got it, loading ' + url);
+        });
+
+        socket.on('loadFile', function(path) {
+          console.log("loading flie " + path);
+          video.src = window.location.href + "/" + path;
+          video.load();
+          socket.emit('message', 'got it, loading ' + path);
+        });
+        
+        socket.on('startPlaying', function() {
+          console.log("playing");
+          video.play();
+          stateText.innerHTML = "Playing"
+          socket.emit('message', 'got it, starting');
+        });
+        
+        socket.on('stopPlaying', function() {
+          console.log("pausing");
+          video.pause();
+          stateText.innerHTML = "Paused"
+          socket.emit('message', 'got it, stopping');
+        });
+        
+        socket.on('setTime', function(seconds) {
+          console.log("setting time to " + seconds);
+          video.pause();
+          video.currentTime = seconds;
+          socket.emit('message', 'got it, setting time to ' + seconds);
+        })
+      }
+
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <!-- width="1150" height="800" -->
+      <video id="video" height="800" width="auto" controls></video>
+      <div class="controls">
+        <input type="text" id="URLInput" placeholder="LINK DO FILMU">
+        <button type="button" id="URLbutton">Load URL</button>
+
+        <p>lub</p>
+
+        <input type="text" id="fileInput" placeholder="NAZWA PLIKU">
+        <button type="button" id="fileButton">Load File</button>
+
+        <button type="button" id="playButton">Play</button>
+        <button type="button" id="pauseButton">Pause</button>
+
+        <input type="time" id="timeInput" step="1" value="00:00:00">
+        <button type="button" id="timeButton">Set time</button>
+
+		<p id="stateText">Paused</p>
+      </div>
+    </div>
+  </body>
+</html>
